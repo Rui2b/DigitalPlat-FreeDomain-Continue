@@ -27,7 +27,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install --upgrade playwright requests ddddocr
+          # 关键修改：锁定 Pillow 版本以解决 ImportError
+          pip install --upgrade playwright requests ddddocr Pillow==9.5.0
 
       - name: Install Playwright browsers
         run: |
