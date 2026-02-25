@@ -27,14 +27,17 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          # 1. 先安装依赖，固定 Pillow 版本
-          pip install playwright requests Pillow==9.5.0 opencv-python-headless
-          # 2. 强制安装 ddddocr，不使用缓存
-          pip install ddddocr --no-cache-dir
-          # 3. 【核心修复】如果 ddddocr 的初始化文件写错了，强制修正它的导入路径
-          # 这行脚本会检查并修复那个该死的 ImportError
-          SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
-          sed -i 's/from .core import DdddOcr/from ddddocr.core import DdddOcr/g' $SITE_PACKAGES/ddddocr/__init__.py || true
+          # 1. 先安装必要的底层支持库，锁定能跑通的最高版本
+          pip install requests Pillow==9.5.0 opencv-python-headless playwright
+          
+          # 2. 安装 ddddocr
+          pip install ddddocr
+          
+          # 3. 【暴力修复方案】直接重写 ddddocr 的入口文件，绕过它内部的所有导入错误
+          # 我们直接把 DdddOcr 类从 core.py 强制引导出来
+          PYTHON_LIB=$(python -c "import site; print(site.getsitepackages()[0])")
+          echo "from .core import DdddOcr" > $PYTHON_LIB/ddddocr/__init__.py
+          echo "import ddddocr; print('ddddocr 修复成功！')"
 
       - name: Install Playwright browsers
         run: |
