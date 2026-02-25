@@ -1,3 +1,8 @@
 asyncio==3.4.3
 requests==2.28.1
 playwright==1.30.0
+ddddocr==1.4.11
+
+asyncio==3.4.3
+requests==2.28.1
+playwright==1.30.0
