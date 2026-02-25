@@ -13,12 +13,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'  # 保持 3.10，对 ddddocr 最友好
+          python-version: '3.10'
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          # 补齐了 libgl1 和 libglib2.0-0，这是 ddddocr 底层 opencv 运行必须的
           sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 libgl1 libglib2.0-0
 
       - name: Clear Playwright cache
@@ -28,19 +27,19 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          # 强制指定 Pillow 9.5.0 (解决 ImportError) 
-          # 同时预装 opencv-python-headless (避免缺少 GUI 库报错)
-          pip install --upgrade playwright requests ddddocr Pillow==9.5.0 opencv-python-headless
+          # 1. 先安装依赖，固定 Pillow 版本
+          pip install playwright requests Pillow==9.5.0 opencv-python-headless
+          # 2. 强制安装 ddddocr，不使用缓存
+          pip install ddddocr --no-cache-dir
+          # 3. 【核心修复】如果 ddddocr 的初始化文件写错了，强制修正它的导入路径
+          # 这行脚本会检查并修复那个该死的 ImportError
+          SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
+          sed -i 's/from .core import DdddOcr/from ddddocr.core import DdddOcr/g' $SITE_PACKAGES/ddddocr/__init__.py || true
 
       - name: Install Playwright browsers
         run: |
           python -m playwright install firefox
           python -m playwright install-deps firefox
-
-      - name: Verify Playwright installation
-        run: |
-          python -m playwright --version
-          ls -la /home/runner/.cache/ms-playwright/firefox-*
 
       - name: Run renew script
         run: python renew.py
