@@ -13,12 +13,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'  # 使用稳定的 Python 版本
+          python-version: '3.10'  # 保持 3.10，对 ddddocr 最友好
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64
+          # 补齐了 libgl1 和 libglib2.0-0，这是 ddddocr 底层 opencv 运行必须的
+          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64 libgl1 libglib2.0-0
 
       - name: Clear Playwright cache
         run: |
@@ -27,8 +28,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          # 关键修改：锁定 Pillow 版本以解决 ImportError
-          pip install --upgrade playwright requests ddddocr Pillow==9.5.0
+          # 强制指定 Pillow 9.5.0 (解决 ImportError) 
+          # 同时预装 opencv-python-headless (避免缺少 GUI 库报错)
+          pip install --upgrade playwright requests ddddocr Pillow==9.5.0 opencv-python-headless
 
       - name: Install Playwright browsers
         run: |
